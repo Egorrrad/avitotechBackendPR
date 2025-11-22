@@ -10,14 +10,14 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/Egorrrad/avitotechBackendPR/internal/storage"
+	"github.com/Egorrrad/avitotechBackendPR/internal/repository"
 	"github.com/gorilla/mux"
 )
 
 type APIServer struct {
 	cfg    *Config
 	router *mux.Router
-	store  *storage.DataStorage
+	store  *repository.DataStorage
 }
 
 func NewServer(cfg *Config) (*APIServer, error) {
