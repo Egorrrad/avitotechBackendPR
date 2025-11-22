@@ -6,22 +6,35 @@ import (
 	"net/http"
 )
 
-type Repository interface {
+type Service interface {
+	PRService
+	TeamService
+	UserService
 }
 
-type Server struct {
-	repo Repository
+type PRService interface {
 }
 
-func NewServer(repository Repository) Server {
-	return Server{
-		repo: repository,
+type TeamService interface {
+}
+
+type UserService interface {
+}
+
+type HTTPHandler struct {
+	service *Service
+}
+
+func NewHTTPHandler(repository *Service) *HTTPHandler {
+	return &HTTPHandler{
+		service: repository,
 	}
 }
 
 func respondJSON(w http.ResponseWriter, status int, data interface{}) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
+
 	err := json.NewEncoder(w).Encode(data)
 	if err != nil {
 		slog.Error("failed to encode response", "error", err)
