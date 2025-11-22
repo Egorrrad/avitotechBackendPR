@@ -1,16 +1,25 @@
 package main
 
 import (
-	"log"
+	"context"
+	"log/slog"
 
 	"github.com/Egorrrad/avitotechBackendPR/internal/app/prservice"
 )
 
 func main() {
-	conf := prservice.NewConfig()
-
-	s := prservice.New(conf)
-	if err := s.Start(); err != nil {
-		log.Fatal(err)
+	ctx := context.Background()
+	cfg, err := prservice.LoadConfig()
+	if err != nil {
+		slog.Error("Load config", "error", err)
 	}
+
+	prservice.InitLogging()
+
+	server, err := prservice.NewServer(cfg)
+	if err != nil {
+		slog.Error("APIServer init", "error", err)
+	}
+
+	server.Start(ctx)
 }
