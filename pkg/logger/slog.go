@@ -27,7 +27,7 @@ func InitSlogHandler(level, format, output string) slog.Handler {
 		logOutput = os.Stdout
 	} else {
 		var err error
-		logOutput, err = os.OpenFile(output, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
+		logOutput, err = os.OpenFile(output, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0o644)
 		if err != nil {
 			logOutput = os.Stdout
 		}

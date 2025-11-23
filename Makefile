@@ -6,7 +6,11 @@ build:
 
 lint:
 	@echo "Running golangci-lint"
-	@golangci-lint run ./... --timeout=5m
+	@golangci-lint run ./... --config .golangci.yml --timeout=5m
+
+lint-fix:
+	@echo "Running golangci-lint fix"
+	golangci-lint run ./... --config .golangci.yml --fix
 
 run:
 	docker compose up --build -d
