@@ -1,4 +1,4 @@
-CREATE TABLE pull_requests
+CREATE TABLE IF NOT EXISTS pull_requests
 (
     id                UUID DEFAULT uuidv7() PRIMARY KEY,
     -- id                SERIAL PRIMARY KEY,
@@ -15,13 +15,13 @@ CREATE TABLE pull_requests
 
 -- создаем отдельную таблицу для статусов
 -- при таком подходе легко изменять названия или добавлять новые
-CREATE TABLE pr_status
+CREATE TABLE IF NOT EXISTS pr_status
 (
     id   SERIAL PRIMARY KEY,
     name VARCHAR NOT NULL
 );
 
-CREATE TABLE reviewers
+CREATE TABLE IF NOT EXISTS reviewers
 (
     pr_id   UUID,
     user_id UUID,
@@ -30,14 +30,14 @@ CREATE TABLE reviewers
     PRIMARY KEY (pr_id, user_id)
 );
 
-CREATE TABLE teams
+CREATE TABLE IF NOT EXISTS teams
 (
     id   UUID DEFAULT uuidv7() PRIMARY KEY,
     -- id   SERIAL PRIMARY KEY,
     name VARCHAR NOT NULL
 );
 
-CREATE TABLE users
+CREATE TABLE IF NOT EXISTS users
 (
     id        UUID DEFAULT uuidv7() PRIMARY KEY,
     -- id        SERIAL PRIMARY KEY,
@@ -46,7 +46,7 @@ CREATE TABLE users
     username  VARCHAR NOT NULL UNIQUE
 );
 
-CREATE TABLE team_member
+CREATE TABLE IF NOT EXISTS team_member
 (
     team_id UUID,
     user_id UUID,
