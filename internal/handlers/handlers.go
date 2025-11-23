@@ -1,9 +1,13 @@
 package handlers
 
 import (
+	"context"
 	"encoding/json"
 	"log/slog"
 	"net/http"
+	"time"
+
+	"github.com/Egorrrad/avitotechBackendPR/internal/models"
 )
 
 type Service interface {
@@ -13,19 +17,26 @@ type Service interface {
 }
 
 type PRService interface {
+	CreatePullRequest(ctx context.Context, prId, author, name string) (*models.PullRequest, error)
+	MergePullRequest(ctx context.Context, prId string, mergedAt time.Time) (*models.PullRequest, error)
+	ReassignReviewer(ctx context.Context, prId string, id2 string) (*models.PullRequest, error)
 }
 
 type TeamService interface {
+	CreateTeam(ctx context.Context, teamName string, members []models.TeamMember) (*models.Team, error)
+	GetTeam(ctx context.Context, teamName string) (*models.Team, error)
 }
 
 type UserService interface {
+	GetPrUserReviewer(ctx context.Context, userId string) ([]*models.PullRequest, error)
+	UpdateUserActive(ctx context.Context, userId string, active bool) (*models.User, error)
 }
 
 type HTTPHandler struct {
-	service *Service
+	service Service
 }
 
-func NewHTTPHandler(repository *Service) *HTTPHandler {
+func NewHTTPHandler(repository Service) *HTTPHandler {
 	return &HTTPHandler{
 		service: repository,
 	}

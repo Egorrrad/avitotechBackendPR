@@ -1,4 +1,4 @@
-package handlers
+package models
 
 import "time"
 
@@ -10,6 +10,9 @@ const (
 	PREXISTS    ErrorResponseErrorCode = "PR_EXISTS"
 	PRMERGED    ErrorResponseErrorCode = "PR_MERGED"
 	TEAMEXISTS  ErrorResponseErrorCode = "TEAM_EXISTS"
+
+	// add new statuses
+	INTERNAL ErrorResponseErrorCode = "INTERNAL_ERROR"
 )
 
 // Defines values for PullRequestStatus.
@@ -26,10 +29,13 @@ const (
 
 // ErrorResponse defines model for ErrorResponse.
 type ErrorResponse struct {
-	Error struct {
-		Code    ErrorResponseErrorCode `json:"code"`
-		Message string                 `json:"message"`
-	} `json:"error"`
+	Error ErrorDetails `json:"error"`
+}
+
+// ErrorDetails defines error model for ErrorResponse
+type ErrorDetails struct {
+	Code    ErrorResponseErrorCode `json:"code"`
+	Message string                 `json:"message"`
 }
 
 // ErrorResponseErrorCode defines model for ErrorResponse.Error.Code.
