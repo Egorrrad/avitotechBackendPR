@@ -13,8 +13,8 @@ import (
 func sendError(w http.ResponseWriter, status int, errCode domain.ErrorResponseErrorCode, message string) {
 	respondJSON(w, status, domain.ErrorResponse{
 		Error: domain.ErrorDetails{
-			errCode,
-			message,
+			Code:    errCode,
+			Message: message,
 		},
 	})
 }
@@ -31,6 +31,8 @@ func handleError(ctx context.Context, w http.ResponseWriter, err error) {
 		sendError(w, http.StatusNotFound, domain.NOTFOUND, "team not found")
 	case errors.Is(err, domain.ErrPRAlreadyExists):
 		sendError(w, http.StatusConflict, domain.PREXISTS, "pull request already exists")
+	case errors.Is(err, domain.ErrTeamAlreadyExists):
+		sendError(w, http.StatusConflict, domain.TEAMEXISTS, "team already exists")
 
 	default:
 		sendError(w, http.StatusInternalServerError, domain.INTERNAL, "internal server error")

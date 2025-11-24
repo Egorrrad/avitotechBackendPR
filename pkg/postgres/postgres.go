@@ -8,6 +8,8 @@ import (
 	"time"
 
 	"github.com/Masterminds/squirrel"
+	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
@@ -26,6 +28,20 @@ type Postgres struct {
 	Builder squirrel.StatementBuilderType
 	Pool    *pgxpool.Pool
 }
+
+type Queryer interface {
+	Exec(ctx context.Context, sql string, arguments ...any) (pgconn.CommandTag, error)
+	Query(ctx context.Context, sql string, args ...any) (pgx.Rows, error)
+	QueryRow(ctx context.Context, sql string, args ...any) pgx.Row
+}
+
+type TransactionManager interface {
+	RunInTx(ctx context.Context, fn func(ctx context.Context) error) error
+}
+
+type contextKey string
+
+const txKey contextKey = "tx"
 
 // New -.
 func New(host, port, user, password, name string, opts ...Option) (*Postgres, error) {
@@ -82,4 +98,37 @@ func (p *Postgres) Close() {
 	if p.Pool != nil {
 		p.Pool.Close()
 	}
+}
+
+func (p *Postgres) RunInTx(ctx context.Context, fn func(context.Context) error) error {
+	tx, err := p.Pool.Begin(ctx)
+	if err != nil {
+		return err
+	}
+
+	txCtx := context.WithoutCancel(ctx)
+
+	defer func() {
+		if r := recover(); r != nil {
+			_ = tx.Rollback(txCtx)
+			panic(r)
+		} else if err != nil {
+			_ = tx.Rollback(txCtx)
+		}
+	}()
+
+	ctxWithTx := context.WithValue(ctx, txKey, tx)
+
+	if err = fn(ctxWithTx); err != nil {
+		return err
+	}
+
+	return tx.Commit(txCtx)
+}
+
+func (p *Postgres) GetQueryer(ctx context.Context) Queryer {
+	if tx, ok := ctx.Value(txKey).(pgx.Tx); ok {
+		return tx
+	}
+	return p.Pool
 }

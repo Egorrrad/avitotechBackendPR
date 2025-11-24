@@ -34,6 +34,7 @@ var (
 	ErrAuthorNotFound      = errors.New("author not found")
 	ErrTeamNotFound        = errors.New("team not found")
 	ErrPRAlreadyExists     = errors.New("pull request already exists")
+	ErrTeamAlreadyExists   = errors.New("team already exists")
 	ErrUserNotFound        = errors.New("user not found")
 	ErrNoCandidatesFound   = errors.New("no candidates found")
 	ErrUserNotReviewer     = errors.New("user not reviewer")

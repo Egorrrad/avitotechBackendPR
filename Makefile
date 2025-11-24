@@ -1,7 +1,7 @@
 .PHONY: build
 
 build:
-	go build -v ./cmd/prservice
+	go build -v ./cmd/app
 
 
 lint:

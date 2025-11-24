@@ -14,7 +14,7 @@ RUN go mod download
 COPY . .
 
 # Build the application
-RUN go build -o /build ./cmd/prservice
+RUN go build -o /build ./cmd/app
 
 # Clean
 RUN go clean -cache -modcache

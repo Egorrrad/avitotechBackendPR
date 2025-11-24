@@ -12,3 +12,6 @@ type TeamMember struct {
 	UserId   string `json:"user_id"`
 	Username string `json:"username"`
 }
+
+// PostTeamAddJSONRequestBody defines body for PostTeamAdd for application/json ContentType.
+type PostTeamAddJSONRequestBody = Team
