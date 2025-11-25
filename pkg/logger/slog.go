@@ -1,8 +1,10 @@
 package logger
 
 import (
+	"context"
 	"fmt"
 	"os"
+	"runtime"
 	"strings"
 
 	"log/slog"
@@ -23,6 +25,42 @@ type Logger struct {
 }
 
 var _ Interface = (*Logger)(nil)
+
+type sourceHandler struct {
+	handler slog.Handler
+	skip    int
+}
+
+func (h *sourceHandler) Enabled(ctx context.Context, level slog.Level) bool {
+	return h.handler.Enabled(ctx, level)
+}
+
+func (h *sourceHandler) Handle(ctx context.Context, record slog.Record) error {
+	if record.Level >= slog.LevelDebug {
+		pc, file, line, ok := runtime.Caller(h.skip)
+		if ok {
+			funcName := runtime.FuncForPC(pc)
+			if funcName != nil {
+				record.AddAttrs(
+					slog.Group("source",
+						slog.String("function", funcName.Name()),
+						slog.String("file", file),
+						slog.Int("line", line),
+					),
+				)
+			}
+		}
+	}
+	return h.handler.Handle(ctx, record)
+}
+
+func (h *sourceHandler) WithAttrs(attrs []slog.Attr) slog.Handler {
+	return &sourceHandler{handler: h.handler.WithAttrs(attrs), skip: h.skip}
+}
+
+func (h *sourceHandler) WithGroup(name string) slog.Handler {
+	return &sourceHandler{handler: h.handler.WithGroup(name), skip: h.skip}
+}
 
 // New -.
 func New(level, format, output string) *Logger {
@@ -53,8 +91,7 @@ func New(level, format, output string) *Logger {
 	}
 
 	opts := &slog.HandlerOptions{
-		Level:     logLevel,
-		AddSource: true,
+		Level: logLevel,
 	}
 
 	var handler slog.Handler
@@ -65,6 +102,7 @@ func New(level, format, output string) *Logger {
 		handler = slog.NewTextHandler(logOutput, opts)
 	}
 
+	handler = &sourceHandler{handler: handler, skip: 5}
 	logger := slog.New(handler)
 
 	return &Logger{
@@ -94,7 +132,7 @@ func (l *Logger) Error(message interface{}, args ...interface{}) {
 
 // Fatal -.
 func (l *Logger) Fatal(message interface{}, args ...interface{}) {
-	l.msg(slog.LevelError, message, args...) // Fatal логируем как Error
+	l.msg(slog.LevelError, message, args...)
 	os.Exit(1)
 }
 
