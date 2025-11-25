@@ -24,9 +24,9 @@ type Service interface {
 }
 
 type PullRequestService interface {
-	CreatePullRequest(ctx context.Context, prID, author, name string) (*domain.PullRequest, error)
-	MergePullRequest(ctx context.Context, prID string, mergedAt time.Time) (*domain.PullRequest, error)
-	ReassignReviewer(ctx context.Context, prID string, id2 string) (*domain.PullRequest, error)
+	CreatePullRequest(ctx context.Context, prID, author, name string) (*domain.PullRequestResponse, error)
+	MergePullRequest(ctx context.Context, prID string, mergedAt time.Time) (*domain.PullRequestResponse, error)
+	ReassignReviewer(ctx context.Context, prID string, id2 string) (*domain.ReassignPRResponse, error)
 }
 
 type TeamService interface {

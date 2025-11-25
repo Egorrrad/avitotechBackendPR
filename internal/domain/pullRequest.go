@@ -48,3 +48,13 @@ type PullRequestShort struct {
 	PullRequestName string            `json:"pull_request_name"`
 	Status          PullRequestStatus `json:"status"`
 }
+
+// for responses
+type PullRequestResponse struct {
+	PR PullRequest `json:"pr"`
+}
+
+type ReassignPRResponse struct {
+	PR         PullRequest `json:"pr"`
+	ReplacedBy string      `json:"replaced_by,omitempty"`
+}

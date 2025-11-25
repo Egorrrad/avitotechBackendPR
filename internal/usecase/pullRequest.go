@@ -8,7 +8,7 @@ import (
 	"github.com/Egorrrad/avitotechBackendPR/internal/domain"
 )
 
-func (s *Service) CreatePullRequest(ctx context.Context, prID, authorID, name string) (*domain.PullRequest, error) {
+func (s *Service) CreatePullRequest(ctx context.Context, prID, authorID, name string) (*domain.PullRequestResponse, error) {
 	exists, err := s.pr.Exists(ctx, prID)
 	if err != nil {
 		return nil, err
@@ -53,10 +53,14 @@ func (s *Service) CreatePullRequest(ctx context.Context, prID, authorID, name st
 		return nil, err
 	}
 
-	return newPR, nil
+	respNewPr := &domain.PullRequestResponse{
+		PR: *newPR,
+	}
+
+	return respNewPr, nil
 }
 
-func (s *Service) MergePullRequest(ctx context.Context, prID string, mergedAt time.Time) (*domain.PullRequest, error) {
+func (s *Service) MergePullRequest(ctx context.Context, prID string, mergedAt time.Time) (*domain.PullRequestResponse, error) {
 	pr, err := s.pr.GetByID(ctx, prID)
 	if err != nil {
 		return nil, err
@@ -66,7 +70,7 @@ func (s *Service) MergePullRequest(ctx context.Context, prID string, mergedAt ti
 	}
 
 	if pr.Status == domain.PullRequestStatusMERGED {
-		return pr, nil
+		return &domain.PullRequestResponse{PR: *pr}, nil
 	}
 
 	pr.Status = domain.PullRequestStatusMERGED
@@ -76,10 +80,10 @@ func (s *Service) MergePullRequest(ctx context.Context, prID string, mergedAt ti
 		return nil, err
 	}
 
-	return pr, nil
+	return &domain.PullRequestResponse{PR: *pr}, nil
 }
 
-func (s *Service) ReassignReviewer(ctx context.Context, prId string, oldReviewerId string) (*domain.PullRequest, error) {
+func (s *Service) ReassignReviewer(ctx context.Context, prId string, oldReviewerId string) (*domain.ReassignPRResponse, error) {
 	pr, err := s.pr.GetByID(ctx, prId)
 	if err != nil {
 		return nil, err
@@ -143,7 +147,11 @@ func (s *Service) ReassignReviewer(ctx context.Context, prId string, oldReviewer
 		return nil, err
 	}
 
-	return pr, nil
+	respPR := &domain.ReassignPRResponse{
+		PR:         *pr,
+		ReplacedBy: newReviewer,
+	}
+	return respPR, nil
 }
 
 func selectRandomReviewers(candidates []string, maxCount int) []string {
