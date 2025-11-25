@@ -21,4 +21,10 @@ stop:
 down:
 	docker compose down
 
+down-volume:
+	docker compose down
+
+e2e-test:
+	go clean -testcache && go test -v ./tests/...
+
 .DEFAULT_GOAL := build
