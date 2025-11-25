@@ -1,26 +1,29 @@
-# Use Go 1.25
-FROM golang:1.25.4
+# Step 1: Modules caching
+FROM golang:1.25-alpine3.21 AS modules
 
-# Move to working directory /avito
-WORKDIR /avito
+COPY go.mod go.sum /modules/
 
-# Copy the go.mod and go.sum files to the /build directory
-COPY go.mod go.sum ./
+WORKDIR /modules
 
-# Install dependencies
 RUN go mod download
 
-# Copy the entire source code into the container
-COPY . .
+# Step 2: Builder
+FROM golang:1.25-alpine3.21 AS builder
 
-# Build the application
-RUN go build -o /build ./cmd/app
+COPY --from=modules /go/pkg /go/pkg
+COPY . /app
 
-# Clean
-RUN go clean -cache -modcache
+WORKDIR /app
 
-# Document the port that may need to be published
-EXPOSE 8080
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 \
+    go build -tags migrate -o /bin/app ./cmd/app
 
-# Start the application
-CMD ["/build"]
+# Step 3: Final
+FROM scratch
+
+COPY --from=builder /app/config /config
+COPY --from=builder /app/migrations /migrations
+COPY --from=builder /bin/app /app
+COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
+
+CMD ["/app"]

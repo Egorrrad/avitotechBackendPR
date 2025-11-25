@@ -4,10 +4,12 @@ package app
 
 import (
 	"errors"
+	"fmt"
 	"log"
 	"os"
 	"time"
 
+	"github.com/golang-migrate/migrate/v4"
 	// migrate tools
 	_ "github.com/golang-migrate/migrate/v4/database/postgres"
 	_ "github.com/golang-migrate/migrate/v4/source/file"
@@ -19,12 +21,16 @@ const (
 )
 
 func init() {
-	databaseURL, ok := os.LookupEnv("PG_URL")
-	if !ok || len(databaseURL) == 0 {
-		log.Fatalf("migrate: environment variable not declared: PG_URL")
-	}
+	user := mustGetenv("PG_USER")
+	password := mustGetenv("PG_PASSWORD")
+	host := mustGetenv("PG_HOST")
+	port := mustGetenv("PG_PORT")
+	dbname := mustGetenv("PG_NAME")
 
-	databaseURL += "?sslmode=disable"
+	databaseURL := fmt.Sprintf(
+		"postgres://%s:%s@%s:%s/%s?sslmode=disable",
+		user, password, host, port, dbname,
+	)
 
 	var (
 		attempts = _defaultAttempts
@@ -58,5 +64,13 @@ func init() {
 		return
 	}
 
-	log.Printf("Migrate: up success")
+	log.Println("Migrate: success")
+}
+
+func mustGetenv(key string) string {
+	val, ok := os.LookupEnv(key)
+	if !ok || len(val) == 0 {
+		log.Fatalf("migrate: environment variable not declared: %s", key)
+	}
+	return val
 }

@@ -1,6 +1,7 @@
 services:
   avito-pr-service:
-    build: .
+    build:
+      context: .
     container_name: avito-pr-service
     ports:
       - "${HTTP_PORT}:${HTTP_PORT}"
