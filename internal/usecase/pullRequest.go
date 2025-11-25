@@ -84,8 +84,31 @@ func (s *Service) MergePullRequest(ctx context.Context, prID string) (*domain.Pu
 	return &domain.PullRequestResponse{PR: *pr}, nil
 }
 
-func (s *Service) ReassignReviewer(ctx context.Context, prId string, oldReviewerId string) (*domain.ReassignPRResponse, error) {
-	pr, err := s.pr.GetByID(ctx, prId)
+func (s *Service) ReassignReviewer(ctx context.Context, prID, oldReviewerID string) (*domain.ReassignPRResponse, error) {
+	pr, err := s.validateReassignRequest(ctx, prID, oldReviewerID)
+	if err != nil {
+		return nil, err
+	}
+
+	newReviewer, err := s.findReplacementReviewer(ctx, pr, oldReviewerID)
+	if err != nil {
+		return nil, err
+	}
+
+	s.replaceReviewer(pr, oldReviewerID, newReviewer)
+
+	if err := s.pr.Update(ctx, pr); err != nil {
+		return nil, err
+	}
+
+	return &domain.ReassignPRResponse{
+		PR:         *pr,
+		ReplacedBy: newReviewer,
+	}, nil
+}
+
+func (s *Service) validateReassignRequest(ctx context.Context, prID, oldReviewerID string) (*domain.PullRequest, error) {
+	pr, err := s.pr.GetByID(ctx, prID)
 	if err != nil {
 		return nil, err
 	}
@@ -97,62 +120,76 @@ func (s *Service) ReassignReviewer(ctx context.Context, prId string, oldReviewer
 		return nil, domain.ErrChangeAfterMerge
 	}
 
-	isAssigned := false
-	currentReviewersSet := make(map[string]bool)
-
-	for _, id := range pr.AssignedReviewers {
-		currentReviewersSet[id] = true
-		if id == oldReviewerId {
-			isAssigned = true
-			break
-		}
-	}
-	if !isAssigned {
+	if !s.isUserAssigned(pr, oldReviewerID) {
 		return nil, domain.ErrUserNotReviewer
 	}
 
-	oldReviewerUser, err := s.users.GetByID(ctx, oldReviewerId)
+	return pr, nil
+}
+
+func (s *Service) isUserAssigned(pr *domain.PullRequest, userID string) bool {
+	for _, id := range pr.AssignedReviewers {
+		if id == userID {
+			return true
+		}
+	}
+	return false
+}
+
+func (s *Service) findReplacementReviewer(ctx context.Context, pr *domain.PullRequest, oldReviewerID string) (string, error) {
+	oldReviewerUser, err := s.users.GetByID(ctx, oldReviewerID)
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 	if oldReviewerUser == nil {
-		return nil, domain.ErrUserNotFound
+		return "", domain.ErrUserNotFound
 	}
 
-	teamMembers, err := s.users.GetByTeamActive(ctx, oldReviewerUser.TeamName)
+	candidates, err := s.getEligibleCandidates(ctx, pr, oldReviewerUser.TeamName, oldReviewerID)
+	if err != nil {
+		return "", err
+	}
+
+	if len(candidates) == 0 {
+		return "", domain.ErrNoCandidatesFound
+	}
+
+	return selectRandomReviewers(candidates, 1)[0], nil
+}
+
+func (s *Service) getEligibleCandidates(ctx context.Context, pr *domain.PullRequest, teamName, oldReviewerID string) ([]string, error) {
+	teamMembers, err := s.users.GetByTeamActive(ctx, teamName)
 	if err != nil {
 		return nil, err
 	}
+
+	currentReviewers := s.getCurrentReviewersSet(pr)
 
 	var candidates []string
 	for _, m := range teamMembers {
-		if m.UserID != oldReviewerId && m.UserID != pr.AuthorID && !currentReviewersSet[m.UserID] {
+		if m.UserID != oldReviewerID && m.UserID != pr.AuthorID && !currentReviewers[m.UserID] {
 			candidates = append(candidates, m.UserID)
 		}
 	}
 
-	if len(candidates) == 0 {
-		return nil, domain.ErrNoCandidatesFound
+	return candidates, nil
+}
+
+func (s *Service) getCurrentReviewersSet(pr *domain.PullRequest) map[string]bool {
+	currentReviewersSet := make(map[string]bool)
+	for _, id := range pr.AssignedReviewers {
+		currentReviewersSet[id] = true
 	}
+	return currentReviewersSet
+}
 
-	newReviewer := selectRandomReviewers(candidates, 1)[0]
-
+func (s *Service) replaceReviewer(pr *domain.PullRequest, oldReviewerID, newReviewer string) {
 	for i, id := range pr.AssignedReviewers {
-		if id == oldReviewerId {
+		if id == oldReviewerID {
 			pr.AssignedReviewers[i] = newReviewer
 			break
 		}
 	}
-
-	if err := s.pr.Update(ctx, pr); err != nil {
-		return nil, err
-	}
-
-	respPR := &domain.ReassignPRResponse{
-		PR:         *pr,
-		ReplacedBy: newReviewer,
-	}
-	return respPR, nil
 }
 
 func selectRandomReviewers(candidates []string, maxCount int) []string {

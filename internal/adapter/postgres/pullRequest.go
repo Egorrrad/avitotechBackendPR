@@ -302,25 +302,39 @@ func (r *PullRequestRepo) GetByID(ctx context.Context, id string) (*domain.PullR
 }
 
 func (r *PullRequestRepo) Update(ctx context.Context, pr *domain.PullRequest) error {
+	prInternalID, err := r.getPRInternalID(ctx, pr.PullRequestID)
+	if err != nil {
+		return err
+	}
+
+	if err := r.updatePRData(ctx, prInternalID, pr); err != nil {
+		return err
+	}
+
+	return r.updateReviewers(ctx, prInternalID, pr.AssignedReviewers)
+}
+
+func (r *PullRequestRepo) getPRInternalID(ctx context.Context, pullRequestID string) (int, error) {
 	q := r.GetQueryer(ctx)
 
-	var prInternalID int
-	sql, args, err := r.Builder.Select("id").From("pull_requests").Where(squirrel.Eq{"pull_request_id": pr.PullRequestID}).ToSql()
+	sql, args, err := r.Builder.Select("id").From("pull_requests").Where(squirrel.Eq{"pull_request_id": pullRequestID}).ToSql()
 	if err != nil {
-		return err
-	}
-	err = q.QueryRow(ctx, sql, args...).Scan(&prInternalID)
-	if errors.Is(err, pgx.ErrNoRows) {
-		return domain.ErrPullRequestNotFound
-	}
-	if err != nil {
-		return err
+		return 0, err
 	}
 
-	reviewerUsers, err := r.resolveExternalUserIDsToInternalIDs(ctx, pr.AssignedReviewers)
-	if err != nil {
-		return err
+	var prInternalID int
+	err = q.QueryRow(ctx, sql, args...).Scan(&prInternalID)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return 0, domain.ErrPullRequestNotFound
 	}
+	if err != nil {
+		return 0, err
+	}
+	return prInternalID, nil
+}
+
+func (r *PullRequestRepo) updatePRData(ctx context.Context, prInternalID int, pr *domain.PullRequest) error {
+	q := r.GetQueryer(ctx)
 
 	statusID, err := r.toStatusID(pr.Status)
 	if err != nil {
@@ -342,7 +356,7 @@ func (r *PullRequestRepo) Update(ctx context.Context, pr *domain.PullRequest) er
 		updateBuilder = updateBuilder.Set("merged_at", mergedAt)
 	}
 
-	sql, args, err = updateBuilder.
+	sql, args, err := updateBuilder.
 		Where(squirrel.Eq{"id": prInternalID}).
 		ToSql()
 
@@ -351,36 +365,53 @@ func (r *PullRequestRepo) Update(ctx context.Context, pr *domain.PullRequest) er
 	}
 
 	_, err = q.Exec(ctx, sql, args...)
-	if err != nil {
+	return err
+}
+
+func (r *PullRequestRepo) updateReviewers(ctx context.Context, prInternalID int, reviewers []string) error {
+	if err := r.deleteReviewers(ctx, prInternalID); err != nil {
 		return err
 	}
+
+	if len(reviewers) > 0 {
+		return r.insertReviewers(ctx, prInternalID, reviewers)
+	}
+
+	return nil
+}
+
+func (r *PullRequestRepo) deleteReviewers(ctx context.Context, prInternalID int) error {
+	q := r.GetQueryer(ctx)
 
 	deleteSQL, deleteArgs, err := r.Builder.Delete("reviewers").Where(squirrel.Eq{"pr_id": prInternalID}).ToSql()
 	if err != nil {
 		return err
 	}
+
 	_, err = q.Exec(ctx, deleteSQL, deleteArgs...)
+	return err
+}
+
+func (r *PullRequestRepo) insertReviewers(ctx context.Context, prInternalID int, reviewers []string) error {
+	q := r.GetQueryer(ctx)
+
+	reviewerUsers, err := r.resolveExternalUserIDsToInternalIDs(ctx, reviewers)
 	if err != nil {
 		return err
 	}
 
-	if len(reviewerUsers) > 0 {
-		reviewersInsert := r.Builder.Insert("reviewers").Columns("pr_id", "user_id")
-		for _, u := range reviewerUsers {
-			reviewersInsert = reviewersInsert.Values(prInternalID, u.ID)
-		}
-
-		insertSQL, insertArgs, err := reviewersInsert.ToSql()
-		if err != nil {
-			return err
-		}
-		_, err = q.Exec(ctx, insertSQL, insertArgs...)
-		if err != nil {
-			return err
-		}
+	reviewersInsert := r.Builder.Insert("reviewers").Columns("pr_id", "user_id")
+	for _, u := range reviewerUsers {
+		reviewersInsert = reviewersInsert.Values(prInternalID, u.ID)
 	}
 
-	return nil
+	insertSQL, insertArgs, err := reviewersInsert.ToSql()
+	if err != nil {
+		return err
+	}
+
+	_, err = q.Exec(ctx, insertSQL, insertArgs...)
+	return err
 }
 
 func (r *PullRequestRepo) GetByReviewerID(ctx context.Context, userID string) ([]*domain.PullRequestShort, error) {
