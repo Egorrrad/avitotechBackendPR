@@ -8,10 +8,11 @@ import (
 	"github.com/Egorrrad/avitotechBackendPR/internal/usecase"
 	"github.com/Egorrrad/avitotechBackendPR/pkg/logger"
 	"github.com/go-chi/chi/v5"
+	"github.com/go-playground/validator/v10"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
-func NewRouter(cfg *config.Config, t usecase.Service, l logger.Interface) http.Handler {
+func NewRouter(cfg *config.Config, t *usecase.Service, l logger.Interface) http.Handler {
 	r := chi.NewRouter()
 
 	// Middleware
@@ -29,7 +30,8 @@ func NewRouter(cfg *config.Config, t usecase.Service, l logger.Interface) http.H
 		w.WriteHeader(http.StatusOK)
 	})
 
-	h := NewHTTPHandler(nil)
+	v := validator.New()
+	h := NewHTTPHandler(t, l, v)
 
 	// Routers
 	// pullRequest routes

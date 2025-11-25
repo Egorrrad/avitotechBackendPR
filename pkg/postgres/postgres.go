@@ -44,7 +44,7 @@ type contextKey string
 const txKey contextKey = "tx"
 
 // New -.
-func New(host, port, user, password, name string, opts ...Option) (*Postgres, error) {
+func New(host, port, user, name, password string, opts ...Option) (*Postgres, error) {
 	pg := &Postgres{
 		maxPoolSize:  _defaultMaxPoolSize,
 		connAttempts: _defaultConnAttempts,
@@ -119,7 +119,8 @@ func (p *Postgres) RunInTx(ctx context.Context, fn func(context.Context) error) 
 
 	ctxWithTx := context.WithValue(ctx, txKey, tx)
 
-	if err = fn(ctxWithTx); err != nil {
+	err = fn(ctxWithTx)
+	if err != nil {
 		return err
 	}
 

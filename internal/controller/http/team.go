@@ -9,7 +9,7 @@ import (
 
 // Создать команду с участниками (создаёт/обновляет пользователей)
 // (POST /team/add)
-func (h *HTTPHandler) PostTeamAdd(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) PostTeamAdd(w http.ResponseWriter, r *http.Request) {
 	var req domain.PostTeamAddJSONRequestBody
 
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -27,7 +27,7 @@ func (h *HTTPHandler) PostTeamAdd(w http.ResponseWriter, r *http.Request) {
 
 // Получить команду с участниками
 // (GET /team/get)
-func (h *HTTPHandler) GetTeamGet(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) GetTeamGet(w http.ResponseWriter, r *http.Request) {
 	teamName := r.URL.Query().Get("team_name")
 
 	ctx := r.Context()

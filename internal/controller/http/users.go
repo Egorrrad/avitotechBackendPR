@@ -9,7 +9,7 @@ import (
 
 // Получить PR'ы, где пользователь назначен ревьювером
 // (GET /users/getReview)
-func (h *HTTPHandler) GetUsersGetReview(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) GetUsersGetReview(w http.ResponseWriter, r *http.Request) {
 	userId := r.URL.Query().Get("user_id")
 
 	ctx := r.Context()
@@ -23,7 +23,7 @@ func (h *HTTPHandler) GetUsersGetReview(w http.ResponseWriter, r *http.Request) 
 
 // Установить флаг активности пользователя
 // (POST /users/setIsActive)
-func (h *HTTPHandler) PostUsersSetIsActive(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) PostUsersSetIsActive(w http.ResponseWriter, r *http.Request) {
 	var req domain.PostUsersSetIsActiveJSONBody
 
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -31,7 +31,7 @@ func (h *HTTPHandler) PostUsersSetIsActive(w http.ResponseWriter, r *http.Reques
 	}
 
 	ctx := r.Context()
-	updUser, err := h.service.UpdateUserActive(ctx, req.UserId, req.IsActive)
+	updUser, err := h.service.UpdateUserActive(ctx, req.UserID, req.IsActive)
 	if err != nil {
 		handleError(ctx, w, err)
 	}

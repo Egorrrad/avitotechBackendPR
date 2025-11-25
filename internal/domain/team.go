@@ -9,7 +9,7 @@ type Team struct {
 // TeamMember defines model for TeamMember.
 type TeamMember struct {
 	IsActive bool   `json:"is_active"`
-	UserId   string `json:"user_id"`
+	UserID   string `json:"user_id"`
 	Username string `json:"username"`
 }
 

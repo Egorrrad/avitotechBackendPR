@@ -8,8 +8,8 @@ import (
 	"github.com/Egorrrad/avitotechBackendPR/internal/domain"
 )
 
-func (s *Service) CreatePullRequest(ctx context.Context, prId, authorId, name string) (*domain.PullRequest, error) {
-	exists, err := s.pr.Exists(ctx, prId)
+func (s *Service) CreatePullRequest(ctx context.Context, prID, authorId, name string) (*domain.PullRequest, error) {
+	exists, err := s.pr.Exists(ctx, prID)
 	if err != nil {
 		return nil, err
 	}
@@ -32,8 +32,8 @@ func (s *Service) CreatePullRequest(ctx context.Context, prId, authorId, name st
 
 	candidates := make([]string, 0)
 	for _, m := range teamMembers {
-		if m.UserId != authorId {
-			candidates = append(candidates, m.UserId)
+		if m.UserID != authorId {
+			candidates = append(candidates, m.UserID)
 		}
 	}
 
@@ -41,9 +41,9 @@ func (s *Service) CreatePullRequest(ctx context.Context, prId, authorId, name st
 
 	now := time.Now()
 	newPR := &domain.PullRequest{
-		PullRequestId:     prId,
+		PullRequestID:     prID,
 		PullRequestName:   name,
-		AuthorId:          authorId,
+		AuthorID:          authorId,
 		Status:            domain.PullRequestStatusOPEN,
 		AssignedReviewers: reviewers,
 		CreatedAt:         &now,
@@ -56,8 +56,8 @@ func (s *Service) CreatePullRequest(ctx context.Context, prId, authorId, name st
 	return newPR, nil
 }
 
-func (s *Service) MergePullRequest(ctx context.Context, prId string, mergedAt time.Time) (*domain.PullRequest, error) {
-	pr, err := s.pr.GetByID(ctx, prId)
+func (s *Service) MergePullRequest(ctx context.Context, prID string, mergedAt time.Time) (*domain.PullRequest, error) {
+	pr, err := s.pr.GetByID(ctx, prID)
 	if err != nil {
 		return nil, err
 	}
@@ -121,8 +121,8 @@ func (s *Service) ReassignReviewer(ctx context.Context, prId string, oldReviewer
 
 	var candidates []string
 	for _, m := range teamMembers {
-		if m.UserId != oldReviewerId && m.UserId != pr.AuthorId && !currentReviewersSet[m.UserId] {
-			candidates = append(candidates, m.UserId)
+		if m.UserID != oldReviewerId && m.UserID != pr.AuthorID && !currentReviewersSet[m.UserID] {
+			candidates = append(candidates, m.UserID)
 		}
 	}
 

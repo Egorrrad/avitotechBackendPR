@@ -17,7 +17,7 @@ import (
 
 // Run creates objects via constructors.
 func Run(cfg *config.Config) {
-	l := logger.New(cfg.Log.Level)
+	l := logger.New(cfg.Log.Level, cfg.Log.Format, cfg.Log.Output)
 
 	// postgres
 	pg, err := postgres.New(
@@ -33,15 +33,20 @@ func Run(cfg *config.Config) {
 	}
 	defer pg.Close()
 
+	pr, err := repo.NewPullRequestRepo(pg)
+	if err != nil {
+		l.Fatal(fmt.Errorf("app - Run - repo.NewPullRequestRepo: %w", err))
+	}
+
 	// UseCase
 	prsUseCase := usecase.NewService(
 		repo.NewTeamRepo(pg),
 		repo.NewUserRepo(pg),
-		repo.NewPullRequestRepo(pg),
+		pr,
 	)
 
 	// HTTP Router (Chi)
-	router := http.NewRouter(cfg, *prsUseCase, l)
+	router := http.NewRouter(cfg, prsUseCase, l)
 
 	// HTTP Server
 	httpServer := httpserver.New(router, l, httpserver.Port(cfg.HTTP.Port))

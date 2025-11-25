@@ -12,19 +12,19 @@ import (
 	"github.com/go-playground/validator/v10"
 )
 
-type Handlers struct {
-	s Service
-	l logger.Interface
-	v *validator.Validate
+type Handler struct {
+	service Service
+	l       logger.Interface
+	v       *validator.Validate
 }
 
 type Service interface {
-	PRService
+	PullRequestService
 	TeamService
 	UserService
 }
 
-type PRService interface {
+type PullRequestService interface {
 	CreatePullRequest(ctx context.Context, prId, author, name string) (*domain.PullRequest, error)
 	MergePullRequest(ctx context.Context, prId string, mergedAt time.Time) (*domain.PullRequest, error)
 	ReassignReviewer(ctx context.Context, prId string, id2 string) (*domain.PullRequest, error)
@@ -40,13 +40,12 @@ type UserService interface {
 	UpdateUserActive(ctx context.Context, userId string, active bool) (*domain.User, error)
 }
 
-type HTTPHandler struct {
-	service Service
-}
-
-func NewHTTPHandler(repository Service) *HTTPHandler {
-	return &HTTPHandler{
-		service: repository,
+func NewHTTPHandler(service Service,
+	l logger.Interface, v *validator.Validate) *Handler {
+	return &Handler{
+		service: service,
+		l:       l,
+		v:       v,
 	}
 }
 

@@ -18,7 +18,7 @@ func (s *Service) CreateTeam(ctx context.Context, teamName string, members []dom
 	domainUsers := make([]domain.User, 0, len(members))
 	for _, m := range members {
 		domainUsers = append(domainUsers, domain.User{
-			UserId:   m.UserId,
+			UserID:   m.UserID,
 			Username: m.Username,
 			IsActive: m.IsActive,
 			TeamName: teamName,

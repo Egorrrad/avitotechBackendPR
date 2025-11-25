@@ -10,7 +10,7 @@ import (
 
 // Создать PR и автоматически назначить до 2 ревьюверов из команды автора
 // (POST /pullRequest/create)
-func (h *HTTPHandler) PostPullRequestCreate(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) PostPullRequestCreate(w http.ResponseWriter, r *http.Request) {
 	var req domain.PostPullRequestCreateJSONBody
 
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -29,11 +29,12 @@ func (h *HTTPHandler) PostPullRequestCreate(w http.ResponseWriter, r *http.Reque
 
 // Пометить PR как MERGED (идемпотентная операция)
 // (POST /pullRequest/merge)
-func (h *HTTPHandler) PostPullRequestMerge(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) PostPullRequestMerge(w http.ResponseWriter, r *http.Request) {
 	var req domain.PostPullRequestMergeJSONBody
 
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		sendError(w, http.StatusBadRequest, domain.NOTFOUND, "Invalid request format")
+		return
 	}
 
 	ctx := r.Context()
@@ -48,7 +49,7 @@ func (h *HTTPHandler) PostPullRequestMerge(w http.ResponseWriter, r *http.Reques
 
 // Переназначить конкретного ревьювера на другого из его команды
 // (POST /pullRequest/reassign)
-func (h *HTTPHandler) PostPullRequestReassign(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) PostPullRequestReassign(w http.ResponseWriter, r *http.Request) {
 	var req domain.PostPullRequestReassignJSONBody
 
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
