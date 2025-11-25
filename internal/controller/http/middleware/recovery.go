@@ -2,37 +2,30 @@ package middleware
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"runtime/debug"
-	"strings"
 
 	"github.com/Egorrrad/avitotechBackendPR/internal/domain"
 	"github.com/Egorrrad/avitotechBackendPR/pkg/logger"
 )
-
-func buildPanicMessage(r *http.Request, err interface{}) string {
-	var result strings.Builder
-
-	result.WriteString(r.RemoteAddr)
-	result.WriteString(" - ")
-	result.WriteString(r.Method)
-	result.WriteString(" ")
-	result.WriteString(r.URL.String())
-	result.WriteString(" PANIC DETECTED: ")
-	result.WriteString(fmt.Sprintf("%v\n%s", err, debug.Stack()))
-
-	return result.String()
-}
 
 func Recovery(l logger.Interface) func(next http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			defer func() {
 				if err := recover(); err != nil {
+					stack := string(debug.Stack())
 
-					message := buildPanicMessage(r, err)
-					l.Error(message)
+					l.Error("HTTP request panic recovered",
+						"panic", err,
+						"stack_trace", stack,
+						"request.method", r.Method,
+						"request.url", r.URL.String(),
+						"request.remote_addr", r.RemoteAddr,
+						"request.user_agent", r.UserAgent(),
+						"request.host", r.Host,
+						"request.proto", r.Proto,
+					)
 
 					w.Header().Set("Content-Type", "application/json")
 					w.WriteHeader(http.StatusInternalServerError)
@@ -40,10 +33,13 @@ func Recovery(l logger.Interface) func(next http.Handler) http.Handler {
 					resp := domain.ErrorResponse{
 						Error: domain.ErrorDetails{
 							Code:    domain.INTERNAL,
-							Message: message,
+							Message: "Internal server error",
 						},
 					}
-					json.NewEncoder(w).Encode(resp)
+
+					if err := json.NewEncoder(w).Encode(resp); err != nil {
+						l.Error("Failed to encode error response", "error", err)
+					}
 				}
 			}()
 

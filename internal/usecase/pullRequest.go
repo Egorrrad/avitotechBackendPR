@@ -8,7 +8,7 @@ import (
 	"github.com/Egorrrad/avitotechBackendPR/internal/domain"
 )
 
-func (s *Service) CreatePullRequest(ctx context.Context, prID, authorId, name string) (*domain.PullRequest, error) {
+func (s *Service) CreatePullRequest(ctx context.Context, prID, authorID, name string) (*domain.PullRequest, error) {
 	exists, err := s.pr.Exists(ctx, prID)
 	if err != nil {
 		return nil, err
@@ -17,7 +17,7 @@ func (s *Service) CreatePullRequest(ctx context.Context, prID, authorId, name st
 		return nil, domain.ErrPRAlreadyExists
 	}
 
-	author, err := s.users.GetByID(ctx, authorId)
+	author, err := s.users.GetByID(ctx, authorID)
 	if err != nil {
 		return nil, err
 	}
@@ -32,7 +32,7 @@ func (s *Service) CreatePullRequest(ctx context.Context, prID, authorId, name st
 
 	candidates := make([]string, 0)
 	for _, m := range teamMembers {
-		if m.UserID != authorId {
+		if m.UserID != authorID {
 			candidates = append(candidates, m.UserID)
 		}
 	}
@@ -43,7 +43,7 @@ func (s *Service) CreatePullRequest(ctx context.Context, prID, authorId, name st
 	newPR := &domain.PullRequest{
 		PullRequestID:     prID,
 		PullRequestName:   name,
-		AuthorID:          authorId,
+		AuthorID:          authorID,
 		Status:            domain.PullRequestStatusOPEN,
 		AssignedReviewers: reviewers,
 		CreatedAt:         &now,

@@ -13,16 +13,16 @@ func (h *Handler) PostTeamAdd(w http.ResponseWriter, r *http.Request) {
 	var req domain.PostTeamAddJSONRequestBody
 
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		sendError(w, http.StatusBadRequest, domain.NOTFOUND, "Invalid request format")
+		h.sendError(w, http.StatusBadRequest, domain.NOTFOUND, "Invalid request format")
 	}
 
 	ctx := r.Context()
 	team, err := h.service.CreateTeam(ctx, req.TeamName, req.Members)
 	if err != nil {
-		handleError(ctx, w, err)
+		h.handleError(ctx, w, err)
 	}
 
-	respondJSON(w, http.StatusCreated, team)
+	h.respondJSON(w, http.StatusCreated, team)
 }
 
 // Получить команду с участниками
@@ -33,8 +33,8 @@ func (h *Handler) GetTeamGet(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	team, err := h.service.GetTeam(ctx, teamName)
 	if err != nil {
-		handleError(ctx, w, err)
+		h.handleError(ctx, w, err)
 	}
 
-	respondJSON(w, http.StatusOK, team)
+	h.respondJSON(w, http.StatusOK, team)
 }

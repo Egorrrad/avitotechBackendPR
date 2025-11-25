@@ -2,31 +2,11 @@ package middleware
 
 import (
 	"net/http"
-	"strconv"
-	"strings"
 	"time"
 
 	"github.com/Egorrrad/avitotechBackendPR/pkg/logger"
 	"github.com/go-chi/chi/v5/middleware"
 )
-
-func buildRequestMessage(r *http.Request, status, length int, duration time.Duration) string {
-	var result strings.Builder
-
-	result.WriteString(r.RemoteAddr)
-	result.WriteString(" - ")
-	result.WriteString(r.Method)
-	result.WriteString(" ")
-	result.WriteString(r.URL.String())
-	result.WriteString(" - ")
-	result.WriteString(strconv.Itoa(status))
-	result.WriteString(" ")
-	result.WriteString(strconv.Itoa(length))
-	result.WriteString(" - ")
-	result.WriteString(duration.String())
-
-	return result.String()
-}
 
 func Logger(l logger.Interface) func(next http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
@@ -39,8 +19,17 @@ func Logger(l logger.Interface) func(next http.Handler) http.Handler {
 
 			duration := time.Since(start)
 
-			message := buildRequestMessage(r, ww.Status(), ww.BytesWritten(), duration)
-			l.Info(message)
+			l.Info("HTTP request",
+				"method", r.Method,
+				"url", r.URL.String(),
+				"remote_addr", r.RemoteAddr,
+				"user_agent", r.UserAgent(),
+				"status", ww.Status(),
+				"bytes_written", ww.BytesWritten(),
+				"duration", duration.String(),
+				"duration_ms", duration.Milliseconds(),
+				"protocol", r.Proto,
+			)
 		})
 	}
 }

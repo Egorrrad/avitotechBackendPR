@@ -11,20 +11,20 @@ const (
 
 // PostPullRequestCreateJSONBody defines parameters for PostPullRequestCreate.
 type PostPullRequestCreateJSONBody struct {
-	AuthorId        string `json:"author_id"`
-	PullRequestId   string `json:"pull_request_id"`
+	AuthorID        string `json:"author_id"`
+	PullRequestID   string `json:"pull_request_id"`
 	PullRequestName string `json:"pull_request_name"`
 }
 
 // PostPullRequestMergeJSONBody defines parameters for PostPullRequestMerge.
 type PostPullRequestMergeJSONBody struct {
-	PullRequestId string `json:"pull_request_id"`
+	PullRequestID string `json:"pull_request_id"`
 }
 
 // PostPullRequestReassignJSONBody defines parameters for PostPullRequestReassign.
 type PostPullRequestReassignJSONBody struct {
-	OldUserId     string `json:"old_user_id"`
-	PullRequestId string `json:"pull_request_id"`
+	OldUserID     string `json:"old_user_id"`
+	PullRequestID string `json:"pull_request_id"`
 }
 
 type PullRequestStatus string

@@ -3,15 +3,13 @@ package http
 import (
 	"context"
 	"errors"
-	"log/slog"
 	"net/http"
 
 	"github.com/Egorrrad/avitotechBackendPR/internal/domain"
-	"github.com/Egorrrad/avitotechBackendPR/internal/middleware"
 )
 
-func sendError(w http.ResponseWriter, status int, errCode domain.ErrorResponseErrorCode, message string) {
-	respondJSON(w, status, domain.ErrorResponse{
+func (h *Handler) sendError(w http.ResponseWriter, status int, errCode domain.ErrorResponseErrorCode, message string) {
+	h.respondJSON(w, status, domain.ErrorResponse{
 		Error: domain.ErrorDetails{
 			Code:    errCode,
 			Message: message,
@@ -19,22 +17,22 @@ func sendError(w http.ResponseWriter, status int, errCode domain.ErrorResponseEr
 	})
 }
 
-func handleError(ctx context.Context, w http.ResponseWriter, err error) {
-	slog.ErrorContext(middleware.ErrorCtx(ctx, err), "Error: "+err.Error())
+func (h *Handler) handleError(ctx context.Context, w http.ResponseWriter, err error) {
+	h.l.Error("Handler error", "error", err)
 
 	switch {
 	case errors.Is(err, domain.ErrAuthorNotFound):
-		sendError(w, http.StatusNotFound, domain.NOTFOUND, "pull request author not found")
+		h.sendError(w, http.StatusNotFound, domain.NOTFOUND, "pull request author not found")
 	case errors.Is(err, domain.ErrPullRequestNotFound):
-		sendError(w, http.StatusNotFound, domain.NOTFOUND, "pull request not found")
+		h.sendError(w, http.StatusNotFound, domain.NOTFOUND, "pull request not found")
 	case errors.Is(err, domain.ErrTeamNotFound):
-		sendError(w, http.StatusNotFound, domain.NOTFOUND, "team not found")
+		h.sendError(w, http.StatusNotFound, domain.NOTFOUND, "team not found")
 	case errors.Is(err, domain.ErrPRAlreadyExists):
-		sendError(w, http.StatusConflict, domain.PREXISTS, "pull request already exists")
+		h.sendError(w, http.StatusConflict, domain.PREXISTS, "pull request already exists")
 	case errors.Is(err, domain.ErrTeamAlreadyExists):
-		sendError(w, http.StatusConflict, domain.TEAMEXISTS, "team already exists")
+		h.sendError(w, http.StatusConflict, domain.TEAMEXISTS, "team already exists")
 
 	default:
-		sendError(w, http.StatusInternalServerError, domain.INTERNAL, "internal server error")
+		h.sendError(w, http.StatusInternalServerError, domain.INTERNAL, "internal server error")
 	}
 }

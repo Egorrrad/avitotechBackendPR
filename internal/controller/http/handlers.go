@@ -3,7 +3,6 @@ package http
 import (
 	"context"
 	"encoding/json"
-	"log/slog"
 	"net/http"
 	"time"
 
@@ -25,9 +24,9 @@ type Service interface {
 }
 
 type PullRequestService interface {
-	CreatePullRequest(ctx context.Context, prId, author, name string) (*domain.PullRequest, error)
-	MergePullRequest(ctx context.Context, prId string, mergedAt time.Time) (*domain.PullRequest, error)
-	ReassignReviewer(ctx context.Context, prId string, id2 string) (*domain.PullRequest, error)
+	CreatePullRequest(ctx context.Context, prID, author, name string) (*domain.PullRequest, error)
+	MergePullRequest(ctx context.Context, prID string, mergedAt time.Time) (*domain.PullRequest, error)
+	ReassignReviewer(ctx context.Context, prID string, id2 string) (*domain.PullRequest, error)
 }
 
 type TeamService interface {
@@ -36,8 +35,8 @@ type TeamService interface {
 }
 
 type UserService interface {
-	GetPrUserReviewer(ctx context.Context, userId string) ([]*domain.PullRequest, error)
-	UpdateUserActive(ctx context.Context, userId string, active bool) (*domain.User, error)
+	GetPrUserReviewer(ctx context.Context, userID string) ([]*domain.PullRequest, error)
+	UpdateUserActive(ctx context.Context, userID string, active bool) (*domain.User, error)
 }
 
 func NewHTTPHandler(service Service,
@@ -49,13 +48,13 @@ func NewHTTPHandler(service Service,
 	}
 }
 
-func respondJSON(w http.ResponseWriter, status int, data interface{}) {
+func (h *Handler) respondJSON(w http.ResponseWriter, status int, data interface{}) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
 
 	err := json.NewEncoder(w).Encode(data)
 	if err != nil {
-		slog.Error("failed to encode response", "error", err)
+		h.l.Error("failed to encode response", "error", err)
 		return
 	}
 }

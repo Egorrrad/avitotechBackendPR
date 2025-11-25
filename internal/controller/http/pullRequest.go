@@ -14,17 +14,17 @@ func (h *Handler) PostPullRequestCreate(w http.ResponseWriter, r *http.Request) 
 	var req domain.PostPullRequestCreateJSONBody
 
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		sendError(w, http.StatusBadRequest, domain.NOTFOUND, "Invalid request format")
+		h.sendError(w, http.StatusBadRequest, domain.NOTFOUND, "Invalid request format")
 		return
 	}
 
 	ctx := r.Context()
-	pr, err := h.service.CreatePullRequest(ctx, req.PullRequestId, req.AuthorId, req.PullRequestName)
+	pr, err := h.service.CreatePullRequest(ctx, req.PullRequestID, req.AuthorID, req.PullRequestName)
 	if err != nil {
-		handleError(ctx, w, err)
+		h.handleError(ctx, w, err)
 	}
 
-	respondJSON(w, http.StatusCreated, pr)
+	h.respondJSON(w, http.StatusCreated, pr)
 }
 
 // Пометить PR как MERGED (идемпотентная операция)
@@ -33,18 +33,18 @@ func (h *Handler) PostPullRequestMerge(w http.ResponseWriter, r *http.Request) {
 	var req domain.PostPullRequestMergeJSONBody
 
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		sendError(w, http.StatusBadRequest, domain.NOTFOUND, "Invalid request format")
+		h.sendError(w, http.StatusBadRequest, domain.NOTFOUND, "Invalid request format")
 		return
 	}
 
 	ctx := r.Context()
 	mergedAt := time.Now()
-	mergedPr, err := h.service.MergePullRequest(ctx, req.PullRequestId, mergedAt)
+	mergedPr, err := h.service.MergePullRequest(ctx, req.PullRequestID, mergedAt)
 	if err != nil {
-		handleError(ctx, w, err)
+		h.handleError(ctx, w, err)
 	}
 
-	respondJSON(w, http.StatusOK, mergedPr)
+	h.respondJSON(w, http.StatusOK, mergedPr)
 }
 
 // Переназначить конкретного ревьювера на другого из его команды
@@ -53,14 +53,14 @@ func (h *Handler) PostPullRequestReassign(w http.ResponseWriter, r *http.Request
 	var req domain.PostPullRequestReassignJSONBody
 
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		sendError(w, http.StatusBadRequest, domain.NOTFOUND, "Invalid request format")
+		h.sendError(w, http.StatusBadRequest, domain.NOTFOUND, "Invalid request format")
 	}
 
 	ctx := r.Context()
-	reasigned, err := h.service.ReassignReviewer(ctx, req.PullRequestId, req.OldUserId)
+	reasigned, err := h.service.ReassignReviewer(ctx, req.PullRequestID, req.OldUserID)
 	if err != nil {
-		handleError(ctx, w, err)
+		h.handleError(ctx, w, err)
 	}
 
-	respondJSON(w, http.StatusOK, reasigned)
+	h.respondJSON(w, http.StatusOK, reasigned)
 }

@@ -10,15 +10,15 @@ import (
 // Получить PR'ы, где пользователь назначен ревьювером
 // (GET /users/getReview)
 func (h *Handler) GetUsersGetReview(w http.ResponseWriter, r *http.Request) {
-	userId := r.URL.Query().Get("user_id")
+	userID := r.URL.Query().Get("user_id")
 
 	ctx := r.Context()
-	prs, err := h.service.GetPrUserReviewer(ctx, userId)
+	prs, err := h.service.GetPrUserReviewer(ctx, userID)
 	if err != nil {
-		handleError(ctx, w, err)
+		h.handleError(ctx, w, err)
 	}
 
-	respondJSON(w, http.StatusOK, prs)
+	h.respondJSON(w, http.StatusOK, prs)
 }
 
 // Установить флаг активности пользователя
@@ -27,14 +27,14 @@ func (h *Handler) PostUsersSetIsActive(w http.ResponseWriter, r *http.Request) {
 	var req domain.PostUsersSetIsActiveJSONBody
 
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		sendError(w, http.StatusBadRequest, domain.NOTFOUND, "Invalid request format")
+		h.sendError(w, http.StatusBadRequest, domain.NOTFOUND, "Invalid request format")
 	}
 
 	ctx := r.Context()
 	updUser, err := h.service.UpdateUserActive(ctx, req.UserID, req.IsActive)
 	if err != nil {
-		handleError(ctx, w, err)
+		h.handleError(ctx, w, err)
 	}
 
-	respondJSON(w, http.StatusOK, updUser)
+	h.respondJSON(w, http.StatusOK, updUser)
 }

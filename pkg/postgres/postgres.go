@@ -79,7 +79,7 @@ func New(host, port, user, name, password string, opts ...Option) (*Postgres, er
 			break
 		}
 
-		slog.Info("Postgres is trying to connect, attempts left: %d", pg.connAttempts)
+		slog.Info("Postgres is trying to connect", "attempts left", pg.connAttempts)
 
 		time.Sleep(pg.connTimeout)
 

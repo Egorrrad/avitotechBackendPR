@@ -35,7 +35,7 @@ func (h *sourceHandler) Enabled(ctx context.Context, level slog.Level) bool {
 	return h.handler.Enabled(ctx, level)
 }
 
-func (h *sourceHandler) Handle(ctx context.Context, record slog.Record) error {
+func (h *sourceHandler) Handle(ctx context.Context, record slog.Record) error { //nolint:gocritic
 	if record.Level >= slog.LevelDebug {
 		pc, file, line, ok := runtime.Caller(h.skip)
 		if ok {
@@ -137,7 +137,7 @@ func (l *Logger) Fatal(message interface{}, args ...interface{}) {
 }
 
 func (l *Logger) log(level slog.Level, message string, args ...interface{}) {
-	l.logger.Log(nil, level, message, args...)
+	l.logger.Log(context.Background(), level, message, args...)
 }
 
 func (l *Logger) msg(level slog.Level, message interface{}, args ...interface{}) {

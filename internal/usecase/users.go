@@ -6,10 +6,6 @@ import (
 	"github.com/Egorrrad/avitotechBackendPR/internal/domain"
 )
 
-type UserService struct {
-	usrRepo UserRepo
-}
-
 func (s *Service) UpdateUserActive(ctx context.Context, userID string, active bool) (*domain.User, error) {
 	user, err := s.users.GetByID(ctx, userID)
 	if err != nil {

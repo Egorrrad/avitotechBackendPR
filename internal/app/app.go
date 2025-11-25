@@ -1,7 +1,6 @@
 package app
 
 import (
-	"fmt"
 	"os"
 	"os/signal"
 	"syscall"
@@ -29,13 +28,13 @@ func Run(cfg *config.Config) {
 		postgres.MaxPoolSize(cfg.PG.PoolMax),
 	)
 	if err != nil {
-		l.Fatal(fmt.Errorf("app - Run - postgres.New: %w", err))
+		l.Fatal("app - Run - postgres.New", "error", err)
 	}
 	defer pg.Close()
 
 	pr, err := repo.NewPullRequestRepo(pg)
 	if err != nil {
-		l.Fatal(fmt.Errorf("app - Run - repo.NewPullRequestRepo: %w", err))
+		l.Fatal("app - Run - repo.NewPullRequestRepo", "error", err)
 	}
 
 	// UseCase
@@ -60,14 +59,14 @@ func Run(cfg *config.Config) {
 
 	select {
 	case s := <-interrupt:
-		l.Info("app - Run - signal: %s", s.String())
+		l.Info("app - Run - signal", "signal", s.String())
 	case err = <-httpServer.Notify():
-		l.Error(fmt.Errorf("app - Run - httpServer.Notify: %w", err))
+		l.Error("app - Run - httpServer.Notify", "error", err)
 	}
 
 	// Shutdown
 	err = httpServer.Shutdown()
 	if err != nil {
-		l.Error(fmt.Errorf("app - Run - httpServer.Shutdown: %w", err))
+		l.Error("app - Run - httpServer.Shutdown", "error", err)
 	}
 }
