@@ -97,7 +97,7 @@ func (r *UserRepo) UpsertBatch(ctx context.Context, users []domain.User) error {
 		return rows.Err()
 	}
 
-	var userInternalIDs []int
+	userInternalIDs := make([]int, 0, len(users))
 	for _, u := range users {
 		userInternalIDs = append(userInternalIDs, userExternalToInternalID[u.UserID])
 	}

@@ -70,7 +70,7 @@ func (r *PullRequestRepo) loadStatusMaps(ctx context.Context) error {
 func (r *PullRequestRepo) toStatusID(status domain.PullRequestStatus) (int, error) {
 	id, ok := r.statusIDMap[status]
 	if !ok {
-		return 0, fmt.Errorf("%w: domain status not mapped to ID", status)
+		return 0, fmt.Errorf("%s: domain status not mapped to ID", status)
 	}
 	return id, nil
 }
@@ -184,7 +184,7 @@ func (r *PullRequestRepo) mapPullRequestFromRows(rows pgx.Rows) ([]*domain.PullR
 		}
 	}
 
-	var result []*domain.PullRequest
+	result := make([]*domain.PullRequest, 0, len(prMap))
 	for _, pr := range prMap {
 		uniqueReviewers := make(map[string]struct{})
 		var cleanReviewers []string
