@@ -4,14 +4,14 @@ CREATE TABLE IF NOT EXISTS users
     id        SERIAL PRIMARY KEY,
     is_active BOOL    NOT NULL,
     user_id   VARCHAR NOT NULL UNIQUE,
-    username  VARCHAR NOT NULL UNIQUE
+    username  VARCHAR NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS teams
 (
     -- id   UUID DEFAULT uuidv7() PRIMARY KEY,
     id   SERIAL PRIMARY KEY,
-    name VARCHAR NOT NULL
+    name VARCHAR NOT NULL UNIQUE
 );
 
 
@@ -24,8 +24,8 @@ CREATE TABLE IF NOT EXISTS team_member
     PRIMARY KEY (team_id, user_id)
 );
 
--- создаем отдельную таблицу для статусов
--- при таком подходе легко изменять названия или добавлять новые
+-- create a separate table for statuses
+-- with this approach, it's easy to change names or add new ones
 CREATE TABLE IF NOT EXISTS pr_status
 (
     id   SERIAL PRIMARY KEY,
@@ -39,9 +39,9 @@ CREATE TABLE IF NOT EXISTS pull_requests
     author_id         INTEGER,
     created_at        TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     merged_at         TIMESTAMP,
-    pull_request_id   VARCHAR   NOT NULL,
+    pull_request_id   VARCHAR   NOT NULL UNIQUE,
     pull_request_name VARCHAR   NOT NULL,
-    status            INTEGER,
+    status            INTEGER   NOT NULL REFERENCES pr_status (id),
     FOREIGN KEY (author_id) REFERENCES users (id),
     FOREIGN KEY (status) REFERENCES pr_status (id)
 
@@ -55,4 +55,13 @@ CREATE TABLE IF NOT EXISTS reviewers
     FOREIGN KEY (user_id) REFERENCES users (id),
     PRIMARY KEY (pr_id, user_id)
 );
+
+CREATE INDEX idx_reviewers_user_id ON reviewers (user_id);
+CREATE INDEX idx_users_active ON users (is_active);
+CREATE INDEX idx_team_member_team_id ON team_member (team_id);
+
+-- add data
+INSERT INTO pr_status (name)
+VALUES ('OPEN'),
+       ('MERGED');
 
