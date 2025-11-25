@@ -201,26 +201,26 @@ func (r *PullRequestRepo) mapPullRequestFromRows(rows pgx.Rows) ([]*domain.PullR
 	return result, rows.Err()
 }
 
-func (r *PullRequestRepo) Create(ctx context.Context, pr *domain.PullRequest) error {
+func (r *PullRequestRepo) Create(ctx context.Context, pr *domain.PullRequest) (*domain.PullRequest, error) {
 	q := r.GetQueryer(ctx)
 
 	authorUsers, err := r.resolveExternalUserIDsToInternalIDs(ctx, []string{pr.AuthorID})
 	if errors.Is(err, domain.ErrUserNotFound) || len(authorUsers) == 0 {
-		return domain.ErrAuthorNotFound
+		return nil, domain.ErrAuthorNotFound
 	}
 	if err != nil {
-		return err
+		return nil, err
 	}
 	authorInternalID := authorUsers[0].ID
 
 	reviewerUsers, err := r.resolveExternalUserIDsToInternalIDs(ctx, pr.AssignedReviewers)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	statusID, err := r.toStatusID(pr.Status)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	var prInternalID int
@@ -232,15 +232,15 @@ func (r *PullRequestRepo) Create(ctx context.Context, pr *domain.PullRequest) er
 		ToSql()
 
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	err = q.QueryRow(ctx, sql, args...).Scan(&prInternalID)
 	if err != nil {
 		if postgres.IsUniqueViolation(err) {
-			return domain.ErrPRAlreadyExists
+			return nil, domain.ErrPRAlreadyExists
 		}
-		return err
+		return nil, err
 	}
 
 	if len(reviewerUsers) > 0 {
@@ -251,15 +251,15 @@ func (r *PullRequestRepo) Create(ctx context.Context, pr *domain.PullRequest) er
 
 		sql, args, err = reviewersInsert.ToSql()
 		if err != nil {
-			return err
+			return nil, err
 		}
 		_, err = q.Exec(ctx, sql, args...)
 		if err != nil {
-			return err
+			return nil, err
 		}
 	}
 
-	return nil
+	return pr, nil
 }
 
 func (r *PullRequestRepo) GetByID(ctx context.Context, id string) (*domain.PullRequest, error) {

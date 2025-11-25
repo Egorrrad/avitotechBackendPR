@@ -8,7 +8,7 @@ import (
 
 type (
 	PullRequestRepo interface {
-		Create(ctx context.Context, pr *domain.PullRequest) error
+		Create(ctx context.Context, pr *domain.PullRequest) (*domain.PullRequest, error)
 		GetByID(ctx context.Context, id string) (*domain.PullRequest, error)
 		Update(ctx context.Context, pr *domain.PullRequest) error
 		GetByReviewerID(ctx context.Context, userID string) ([]*domain.PullRequest, error)

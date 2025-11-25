@@ -27,6 +27,8 @@ func (h *Handler) handleError(ctx context.Context, w http.ResponseWriter, err er
 		h.sendError(w, http.StatusNotFound, domain.NOTFOUND, "pull request not found")
 	case errors.Is(err, domain.ErrTeamNotFound):
 		h.sendError(w, http.StatusNotFound, domain.NOTFOUND, "team not found")
+	case errors.Is(err, domain.ErrUserNotFound):
+		h.sendError(w, http.StatusNotFound, domain.NOTFOUND, "user not found")
 	case errors.Is(err, domain.ErrPRAlreadyExists):
 		h.sendError(w, http.StatusConflict, domain.PREXISTS, "pull request already exists")
 	case errors.Is(err, domain.ErrTeamAlreadyExists):

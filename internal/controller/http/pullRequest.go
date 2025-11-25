@@ -22,6 +22,7 @@ func (h *Handler) PostPullRequestCreate(w http.ResponseWriter, r *http.Request) 
 	pr, err := h.service.CreatePullRequest(ctx, req.PullRequestID, req.AuthorID, req.PullRequestName)
 	if err != nil {
 		h.handleError(ctx, w, err)
+		return
 	}
 
 	h.respondJSON(w, http.StatusCreated, pr)
@@ -42,6 +43,7 @@ func (h *Handler) PostPullRequestMerge(w http.ResponseWriter, r *http.Request) {
 	mergedPr, err := h.service.MergePullRequest(ctx, req.PullRequestID, mergedAt)
 	if err != nil {
 		h.handleError(ctx, w, err)
+		return
 	}
 
 	h.respondJSON(w, http.StatusOK, mergedPr)
@@ -54,12 +56,14 @@ func (h *Handler) PostPullRequestReassign(w http.ResponseWriter, r *http.Request
 
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		h.sendError(w, http.StatusBadRequest, domain.NOTFOUND, "Invalid request format")
+		return
 	}
 
 	ctx := r.Context()
 	reasigned, err := h.service.ReassignReviewer(ctx, req.PullRequestID, req.OldUserID)
 	if err != nil {
 		h.handleError(ctx, w, err)
+		return
 	}
 
 	h.respondJSON(w, http.StatusOK, reasigned)

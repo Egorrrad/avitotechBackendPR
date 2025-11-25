@@ -16,6 +16,7 @@ func (h *Handler) GetUsersGetReview(w http.ResponseWriter, r *http.Request) {
 	prs, err := h.service.GetPrUserReviewer(ctx, userID)
 	if err != nil {
 		h.handleError(ctx, w, err)
+		return
 	}
 
 	h.respondJSON(w, http.StatusOK, prs)
@@ -28,12 +29,14 @@ func (h *Handler) PostUsersSetIsActive(w http.ResponseWriter, r *http.Request) {
 
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		h.sendError(w, http.StatusBadRequest, domain.NOTFOUND, "Invalid request format")
+		return
 	}
 
 	ctx := r.Context()
 	updUser, err := h.service.UpdateUserActive(ctx, req.UserID, req.IsActive)
 	if err != nil {
 		h.handleError(ctx, w, err)
+		return
 	}
 
 	h.respondJSON(w, http.StatusOK, updUser)

@@ -49,7 +49,7 @@ func (s *Service) CreatePullRequest(ctx context.Context, prID, authorID, name st
 		CreatedAt:         &now,
 	}
 
-	if err := s.pr.Create(ctx, newPR); err != nil {
+	if _, err := s.pr.Create(ctx, newPR); err != nil {
 		return nil, err
 	}
 
