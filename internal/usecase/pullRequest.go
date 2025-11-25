@@ -60,7 +60,7 @@ func (s *Service) CreatePullRequest(ctx context.Context, prID, authorID, name st
 	return respNewPr, nil
 }
 
-func (s *Service) MergePullRequest(ctx context.Context, prID string, mergedAt time.Time) (*domain.PullRequestResponse, error) {
+func (s *Service) MergePullRequest(ctx context.Context, prID string) (*domain.PullRequestResponse, error) {
 	pr, err := s.pr.GetByID(ctx, prID)
 	if err != nil {
 		return nil, err
@@ -73,6 +73,7 @@ func (s *Service) MergePullRequest(ctx context.Context, prID string, mergedAt ti
 		return &domain.PullRequestResponse{PR: *pr}, nil
 	}
 
+	mergedAt := time.Now()
 	pr.Status = domain.PullRequestStatusMERGED
 	pr.MergedAt = &mergedAt
 

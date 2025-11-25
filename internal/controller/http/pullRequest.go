@@ -3,7 +3,6 @@ package http
 import (
 	"encoding/json"
 	"net/http"
-	"time"
 
 	"github.com/Egorrrad/avitotechBackendPR/internal/domain"
 )
@@ -39,8 +38,7 @@ func (h *Handler) PostPullRequestMerge(w http.ResponseWriter, r *http.Request) {
 	}
 
 	ctx := r.Context()
-	mergedAt := time.Now()
-	mergedPr, err := h.service.MergePullRequest(ctx, req.PullRequestID, mergedAt)
+	mergedPr, err := h.service.MergePullRequest(ctx, req.PullRequestID)
 	if err != nil {
 		h.handleError(ctx, w, err)
 		return

@@ -70,7 +70,7 @@ func (r *PullRequestRepo) loadStatusMaps(ctx context.Context) error {
 func (r *PullRequestRepo) toStatusID(status domain.PullRequestStatus) (int, error) {
 	id, ok := r.statusIDMap[status]
 	if !ok {
-		return 0, fmt.Errorf("%w: domain status not mapped to ID: %s", status)
+		return 0, fmt.Errorf("%w: domain status not mapped to ID", status)
 	}
 	return id, nil
 }
@@ -383,7 +383,7 @@ func (r *PullRequestRepo) Update(ctx context.Context, pr *domain.PullRequest) er
 	return nil
 }
 
-func (r *PullRequestRepo) GetByReviewerID(ctx context.Context, userID string) ([]*domain.PullRequest, error) {
+func (r *PullRequestRepo) GetByReviewerID(ctx context.Context, userID string) ([]*domain.PullRequestShort, error) {
 	q := r.GetQueryer(ctx)
 
 	reviewerUsers, err := r.resolveExternalUserIDsToInternalIDs(ctx, []string{userID})
@@ -397,18 +397,15 @@ func (r *PullRequestRepo) GetByReviewerID(ctx context.Context, userID string) ([
 
 	sql, args, err := r.Builder.
 		Select(
-			"pr.id", "pr.pull_request_id", "pr.pull_request_name",
-			"pr.author_id", "author.user_id",
-			"pr.status", "pr.created_at", "pr.merged_at",
-			"r_user.user_id",
+			"pr.pull_request_id",
+			"pr.pull_request_name",
+			"author.user_id",
+			"pr.status",
 		).
 		From("reviewers r").
 		Join("pull_requests pr ON r.pr_id = pr.id").
 		Join("users author ON pr.author_id = author.id").
-		LeftJoin("reviewers r2 ON pr.id = r2.pr_id").
-		LeftJoin("users r_user ON r2.user_id = r_user.id").
 		Where(squirrel.Eq{"r.user_id": reviewerInternalID}).
-		Distinct().
 		ToSql()
 
 	if err != nil {
@@ -421,7 +418,31 @@ func (r *PullRequestRepo) GetByReviewerID(ctx context.Context, userID string) ([
 	}
 	defer rows.Close()
 
-	return r.mapPullRequestFromRows(rows)
+	var result []*domain.PullRequestShort
+	for rows.Next() {
+		var pr domain.PullRequestShort
+		var statusID int
+
+		err := rows.Scan(
+			&pr.PullRequestID,
+			&pr.PullRequestName,
+			&pr.AuthorID,
+			&statusID,
+		)
+		if err != nil {
+			return nil, err
+		}
+
+		statusName, err := r.toStatusName(statusID)
+		if err != nil {
+			return nil, err
+		}
+		pr.Status = statusName
+
+		result = append(result, &pr)
+	}
+
+	return result, rows.Err()
 }
 
 func (r *PullRequestRepo) Exists(ctx context.Context, id string) (bool, error) {

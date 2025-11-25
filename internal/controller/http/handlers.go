@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"net/http"
-	"time"
 
 	"github.com/Egorrrad/avitotechBackendPR/internal/domain"
 	"github.com/Egorrrad/avitotechBackendPR/pkg/logger"
@@ -25,7 +24,7 @@ type Service interface {
 
 type PullRequestService interface {
 	CreatePullRequest(ctx context.Context, prID, author, name string) (*domain.PullRequestResponse, error)
-	MergePullRequest(ctx context.Context, prID string, mergedAt time.Time) (*domain.PullRequestResponse, error)
+	MergePullRequest(ctx context.Context, prID string) (*domain.PullRequestResponse, error)
 	ReassignReviewer(ctx context.Context, prID string, id2 string) (*domain.ReassignPRResponse, error)
 }
 
@@ -35,8 +34,8 @@ type TeamService interface {
 }
 
 type UserService interface {
-	GetPrUserReviewer(ctx context.Context, userID string) ([]*domain.PullRequest, error)
-	UpdateUserActive(ctx context.Context, userID string, active bool) (*domain.User, error)
+	GetPrUserReviewer(ctx context.Context, userID string) (*domain.UserReviewsResponse, error)
+	UpdateUserActive(ctx context.Context, userID string, active bool) (*domain.UserUpdActiveResponse, error)
 }
 
 func NewHTTPHandler(service Service,

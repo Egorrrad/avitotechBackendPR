@@ -11,7 +11,7 @@ type (
 		Create(ctx context.Context, pr *domain.PullRequest) (*domain.PullRequest, error)
 		GetByID(ctx context.Context, id string) (*domain.PullRequest, error)
 		Update(ctx context.Context, pr *domain.PullRequest) error
-		GetByReviewerID(ctx context.Context, userID string) ([]*domain.PullRequest, error)
+		GetByReviewerID(ctx context.Context, userID string) ([]*domain.PullRequestShort, error)
 		Exists(ctx context.Context, id string) (bool, error)
 	}
 

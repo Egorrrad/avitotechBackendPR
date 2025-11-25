@@ -32,7 +32,13 @@ func (h *Handler) handleError(ctx context.Context, w http.ResponseWriter, err er
 	case errors.Is(err, domain.ErrPRAlreadyExists):
 		h.sendError(w, http.StatusConflict, domain.PREXISTS, "pull request already exists")
 	case errors.Is(err, domain.ErrTeamAlreadyExists):
-		h.sendError(w, http.StatusConflict, domain.TEAMEXISTS, "team already exists")
+		h.sendError(w, http.StatusBadRequest, domain.TEAMEXISTS, "team_name already exists")
+	case errors.Is(err, domain.ErrNoCandidatesFound):
+		h.sendError(w, http.StatusConflict, domain.NOCANDIDATE, "no candidates found")
+	case errors.Is(err, domain.ErrUserNotReviewer):
+		h.sendError(w, http.StatusConflict, domain.NOTASSIGNED, "user not assigned")
+	case errors.Is(err, domain.ErrChangeAfterMerge):
+		h.sendError(w, http.StatusConflict, domain.PRMERGED, "change after merge not allowed")
 
 	default:
 		h.sendError(w, http.StatusInternalServerError, domain.INTERNAL, "internal server error")

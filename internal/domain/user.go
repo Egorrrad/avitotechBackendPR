@@ -13,3 +13,12 @@ type User struct {
 	UserID   string `json:"user_id"`
 	Username string `json:"username"`
 }
+
+type UserUpdActiveResponse struct {
+	User User `json:"user"`
+}
+
+type UserReviewsResponse struct {
+	UserID       string              `json:"user_id"`
+	PullRequests []*PullRequestShort `json:"pull_requests"`
+}

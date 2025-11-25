@@ -87,8 +87,9 @@ func (r *UserRepo) UpsertBatch(ctx context.Context, users []domain.User) error {
 	var internalID int
 	var externalID string
 	for rows.Next() {
-		if err = rows.Scan(&internalID, &externalID); err != nil {
-			return err
+		errRow := rows.Scan(&internalID, &externalID)
+		if errRow != nil {
+			return errRow
 		}
 		userExternalToInternalID[externalID] = internalID
 	}

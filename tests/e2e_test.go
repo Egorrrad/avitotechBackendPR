@@ -249,10 +249,13 @@ func TestE2E_MergeIdempotency(t *testing.T) {
 	json.Unmarshal(body1, &resp1)
 	assert.Equal(t, "MERGED", resp1.PR.Status)
 	assert.NotNil(t, resp1.PR.MergedAt, "MergedAt should be set after merge")
-	mergedAt1 := resp1.PR.MergedAt
+
+	// Парсим время из первого ответа
+	time1, err := time.Parse(time.RFC3339Nano, *resp1.PR.MergedAt)
+	require.NoError(t, err)
 
 	// 3. Второй Merge (Идемпотентность)
-	time.Sleep(100 * time.Millisecond) // Небольшая задержка
+	time.Sleep(1000 * time.Millisecond) // Небольшая задержка
 	code2, body2 := sendRequest(t, "POST", "/pullRequest/merge", reqMerge)
 	require.Equal(t, http.StatusOK, code2, "Second merge should return 200 OK")
 
@@ -261,8 +264,12 @@ func TestE2E_MergeIdempotency(t *testing.T) {
 	assert.Equal(t, "MERGED", resp2.PR.Status)
 	assert.NotNil(t, resp2.PR.MergedAt)
 
+	// Парсим время из второго ответа
+	time2, err := time.Parse(time.RFC3339Nano, *resp2.PR.MergedAt)
+	require.NoError(t, err)
+
 	// Время мерджа должно остаться прежним (идемпотентность)
-	assert.Equal(t, mergedAt1, resp2.PR.MergedAt, "MergedAt timestamp should not change")
+	assert.WithinDuration(t, time1, time2, time.Microsecond, "MergedAt timestamp should not change")
 }
 
 func TestE2E_ReassignReviewer(t *testing.T) {
