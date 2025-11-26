@@ -1,21 +1,12 @@
 services:
-  avito-pr-service:
+  avito-pr-service-test:
     build:
       context: .
-    container_name: avito-pr-service
+    container_name: avito-pr-service-load-test
     ports:
       - "${HTTP_PORT}:${HTTP_PORT}"
-    environment:
-      HTTP_PORT: ${HTTP_PORT}
-      LOG_LEVEL: ${LOG_LEVEL}
-      PG_POOL_MAX: ${PG_POOL_MAX}
-      PG_HOST: ${PG_HOST}
-      PG_PORT: ${PG_PORT}
-      PG_NAME: ${PG_NAME}
-      PG_PASSWORD: ${PG_PASSWORD}
-      PG_USER: ${PG_USER}
     env_file:
-      - .env
+      - .env.test
     healthcheck:
       test: [ "CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:${HTTP_PORT}/health" ]
       interval: 5s
@@ -23,17 +14,17 @@ services:
       retries: 10
       start_period: 15s
     depends_on:
-      postgres:
+      postgres-test:
         condition: service_healthy
     networks:
-      - avito-pr-network
+      - avito-pr-network-test
 
-  postgres:
+  postgres-test:
     image: postgres:18
     restart: always
-    container_name: avito-pr-db
+    container_name: avito-pr-db-load-test
     env_file:
-      - .env
+      - .env.test
     environment:
       POSTGRES_USER: ${PG_USER}
       POSTGRES_PASSWORD: ${PG_PASSWORD}
@@ -47,12 +38,12 @@ services:
     ports:
       - "${PG_PORT}:5432"
     volumes:
-      - pg-data:/var/lib/postgresql
+      - load_test_postgres_data:/var/lib/postgresql
     networks:
-      - avito-pr-network
+      - avito-pr-network-test
 
 volumes:
-  pg-data:
+  load_test_postgres_data:
 
 networks:
-  avito-pr-network:
+  avito-pr-network-test:

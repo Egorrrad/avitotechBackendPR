@@ -53,5 +53,10 @@ func NewRouter(cfg *config.Config, t *usecase.Service, l logger.Interface) http.
 		r.Post("/setIsActive", h.PostUsersSetIsActive)
 	})
 
+	// add healthcheck
+	r.Get("/health", func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+	})
+
 	return r
 }

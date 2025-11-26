@@ -1,5 +1,5 @@
 // nolint
-package tests
+package e2e
 
 import (
 	"bytes"
