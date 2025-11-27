@@ -20,6 +20,7 @@ curl -f "${BASE_URL}/health" || {
 mkdir -p "$OUTPUT_DIR"
 
 echo "Запуск теста..."
+K6_WEB_DASHBOARD=true K6_WEB_DASHBOARD_EXPORT="${OUTPUT_DIR}/report.html" \
 k6 run \
   --out json="${OUTPUT_DIR}/results.json" \
   --summary-export="${OUTPUT_DIR}/summary.json" \

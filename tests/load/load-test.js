@@ -70,7 +70,7 @@ export default function(data) {
     const rand = Math.random();
 
     // 5% — Получение команды (GET /team/get)
-    if (rand < 0.95) {
+    if (rand < 0.05) {
         if (teams.length === 0) return;
 
         const res = http.get(

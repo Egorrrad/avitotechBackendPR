@@ -43,7 +43,6 @@ load-test:
 	BASE_URL="http://localhost:$$HTTP_PORT" && \
 	if ! curl -f "$$BASE_URL/health"; then \
 	  echo "Service is not healthy"; \
-	  echo "$$BASE_URL/health"; \
 	  docker compose -f docker-compose.load-test.yml down -v; \
 	  exit 1; \
     fi
@@ -51,7 +50,7 @@ load-test:
 	@chmod +x tests/load/run-load-test.sh
 	@source .env.test && \
 	BASE_URL=http://localhost:$$HTTP_PORT \
-	OUTPUT_DIR=results \
+	OUTPUT_DIR=tests/load/results \
 	./tests/load/run-load-test.sh || true
 
 	@echo "Cleaning up test environment..."
