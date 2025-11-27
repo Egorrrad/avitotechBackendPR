@@ -22,10 +22,10 @@ down:
 	docker compose down
 
 down-volume:
-	docker compose down
+	docker compose down -v
 
 e2e-test:
-	go clean -testcache && go test -v ./tests/...
+	go clean -testcache && go test -v ./tests/e2e/...
 
 load-test:
 	@echo "Running load tests in isolated environment..."
@@ -34,24 +34,28 @@ load-test:
 		exit 1; \
 	fi
 
-	# Поднимаем сервисы с правильными переменными
 	@docker compose --env-file .env.test -f docker-compose.load-test.yml up -d --build
 
+	@echo "Waiting 20 seconds for services to start..."
+	@sleep 20
+
 	@source .env.test && \
-			BASE_URL=http://localhost:$$HTTP_PORT \
-			curl -f "${BASE_URL}/health" || { \
-                echo "Service is not healthy" \
-                exit 1 \
-            }
+	BASE_URL="http://localhost:$$HTTP_PORT" && \
+	if ! curl -f "$$BASE_URL/health"; then \
+	  echo "Service is not healthy"; \
+	  echo "$$BASE_URL/health"; \
+	  docker compose -f docker-compose.load-test.yml down -v; \
+	  exit 1; \
+    fi
 
 	@chmod +x tests/load/run-load-test.sh
 	@source .env.test && \
-				BASE_URL=http://localhost:$$HTTP_PORT \
-				OUTPUT_DIR=tests/load/results \
-				./tests/load/run-load-test.sh || true
+	BASE_URL=http://localhost:$$HTTP_PORT \
+	OUTPUT_DIR=results \
+	./tests/load/run-load-test.sh || true
 
-		@echo "Cleaning up test environment..."
-		@docker compose -f docker-compose.load-test.yml down -v
-		@echo "Load test completed"
+	@echo "Cleaning up test environment..."
+	@docker compose -f docker-compose.load-test.yml down -v
+	@echo "Load test completed"
 
 .DEFAULT_GOAL := build

@@ -37,5 +37,6 @@ fi
 
 echo ""
 echo "Результаты сохранены в: $OUTPUT_DIR"
+echo ""
 
 exit $EXIT_CODE

@@ -70,7 +70,7 @@ export default function(data) {
     const rand = Math.random();
 
     // 5% — Получение команды (GET /team/get)
-    if (rand < 0.05) {
+    if (rand < 0.95) {
         if (teams.length === 0) return;
 
         const res = http.get(
@@ -83,7 +83,7 @@ export default function(data) {
             'get_team: valid JSON with team_name and members': (r) => {
                 try {
                     const body = JSON.parse(r.body);
-                    return body.team && body.team.team_name === teamName && Array.isArray(body.team.members);
+                    return body.team_name === randomTeam && Array.isArray(body.members);
                 } catch (e) {
                     return false;
                 }
