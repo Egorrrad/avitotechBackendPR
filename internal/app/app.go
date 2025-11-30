@@ -3,6 +3,7 @@ package app
 import (
 	"os"
 	"os/signal"
+	"runtime"
 	"syscall"
 
 	"github.com/Egorrrad/avitotechBackendPR/config"
@@ -12,10 +13,37 @@ import (
 	"github.com/Egorrrad/avitotechBackendPR/pkg/httpserver"
 	"github.com/Egorrrad/avitotechBackendPR/pkg/logger"
 	"github.com/Egorrrad/avitotechBackendPR/pkg/postgres"
+
+	"github.com/grafana/pyroscope-go"
 )
 
 // Run creates objects via constructors.
 func Run(cfg *config.Config) {
+	runtime.SetMutexProfileFraction(1)
+	runtime.SetBlockProfileRate(1)
+	_, err := pyroscope.Start(pyroscope.Config{
+		ApplicationName: "avito.app",
+		ServerAddress:   "http://pyroscope:4040",
+		Logger:          pyroscope.StandardLogger,
+		ProfileTypes: []pyroscope.ProfileType{
+			pyroscope.ProfileCPU,
+			pyroscope.ProfileAllocObjects,
+			pyroscope.ProfileAllocSpace,
+			pyroscope.ProfileInuseObjects,
+			pyroscope.ProfileInuseSpace,
+
+			pyroscope.ProfileGoroutines,
+			pyroscope.ProfileMutexCount,
+			pyroscope.ProfileMutexDuration,
+			pyroscope.ProfileBlockCount,
+			pyroscope.ProfileBlockDuration,
+		},
+	})
+
+	if err != nil {
+		panic(err)
+	}
+
 	l := logger.New(cfg.Log.Level, cfg.Log.Format, cfg.Log.Output)
 
 	// postgres

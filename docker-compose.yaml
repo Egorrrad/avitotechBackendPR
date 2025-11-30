@@ -25,6 +25,8 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+      pyroscope:
+        condition: service_started
     networks:
       - avito-pr-network
 
@@ -48,6 +50,13 @@ services:
       - "${PG_PORT}:5432"
     volumes:
       - pg-data:/var/lib/postgresql
+    networks:
+      - avito-pr-network
+
+  pyroscope:
+    image: grafana/pyroscope:latest
+    ports:
+      - "4040:4040"
     networks:
       - avito-pr-network
 
